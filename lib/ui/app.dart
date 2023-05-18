@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gptex/model/ChatModel.dart';
 import 'package:flutter_gptex/themes/app.fonts.dart';
 import 'package:flutter_gptex/ui/component/appbar.dart';
 import 'package:flutter_gptex/ui/component/bubble.chat.component.dart';
@@ -11,22 +12,33 @@ class App extends StatefulWidget {
 }
 
 class AppState extends State<App> {
+  ///inital messages from gpt
+  final messages = <ChatModel>[
+    ChatModel(message:'Halo, Gpt disi. silahkan tanyakan apapun ', isUserMessage: false),
+  ];
+  ///define controller for text field
+  final controller = TextEditingController();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: globalAppBar(elevation: 1.0),
       resizeToAvoidBottomInset: true,
       body: SingleChildScrollView(
-        physics: ClampingScrollPhysics(),
+        physics: const ClampingScrollPhysics(),
         child: Column(
           mainAxisSize: MainAxisSize.max,
           children: [
             const SizedBox(
               height: 20.0,
             ),
-            ///user chats
-            _userChatWidget(),
-            _receiveChatWidget(),
+            ///chats
+            ListView(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              children:List.generate(messages.length, (index) =>
+              messages[index].isUserMessage!?_userChatWidget(msg:messages[index].message):_receiveChatWidget(msg:messages[index].message)
+              ),
+            )
           ],
         ),
       ),
@@ -54,11 +66,12 @@ class AppState extends State<App> {
                     borderRadius: BorderRadius.circular(20.0)),
                 child: TextField(
                   maxLines: null,
+                  controller: controller,
                   style: appFonts.style(),
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: Colors.white54,
-                    hintText: 'Ask GPT Everything',
+                    hintText: 'Ask a question ... ',
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(20.0),
                       borderSide: const BorderSide(color: Colors.white),
@@ -80,10 +93,16 @@ class AppState extends State<App> {
               width: 6.0,
             ),
             FloatingActionButton(
-              onPressed: () {},
+              onPressed: () {
+                if(controller.text.isNotEmpty){
+                 setState(() {
+                   messages.add(ChatModel(message: controller.text,isUserMessage: true));
+                 });
+                }
+              },
               backgroundColor: Colors.black87,
-              child: const Icon(Icons.send),
               elevation: 10.0,
+              child: const Icon(Icons.send),
             )
           ],
         ),
@@ -91,7 +110,7 @@ class AppState extends State<App> {
     );
   }
 
-  _userChatWidget()=>Container(
+  _userChatWidget({msg})=>Container(
     margin: const EdgeInsets.symmetric(horizontal: 20.0),
     child: Row(
       mainAxisAlignment: MainAxisAlignment.end,
@@ -110,7 +129,7 @@ class AppState extends State<App> {
           padding: const EdgeInsets.symmetric(
               horizontal: 20.0, vertical: 10.0),
           child: appFonts.text(
-              'Siapakah nama presiden pertama indonesia?',
+              msg.toString(),
               weight: FontWeight.normal,
               color: Colors.white,
               maxLine: null
@@ -122,7 +141,7 @@ class AppState extends State<App> {
       ],
     ),
   );
-  _receiveChatWidget()=> Container(
+  _receiveChatWidget({msg})=> Container(
     margin:
     const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
     child: Row(
@@ -144,7 +163,7 @@ class AppState extends State<App> {
           padding: const EdgeInsets.symmetric(
               horizontal: 20.0, vertical: 10.0),
           child: appFonts.text(
-              'Presiden pertama indonesia adalah soekarno',
+              msg.toString(),
               maxLine: null,
               weight: FontWeight.normal,color: Colors.white),
         ),
